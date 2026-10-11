@@ -18,30 +18,40 @@ const promoBtn = document.getElementById("promo-btn");
 const clearBtn = document.getElementById("clear-btn");
 
 function renderProducts() {
-  products.forEach((p) => {
+  products.forEach((p, i) => {
     const card = document.createElement("div");
     card.className = "product";
     card.innerHTML = `<h3>${p.name}</h3><p>${p.price} ₽</p>`;
     const btn = document.createElement("button");
     btn.textContent = "В корзину";
+    btn.id = i + 1; 
     btn.addEventListener("click", addToCart);
     card.appendChild(btn);
     productsEl.appendChild(card);
   });
 }
 
-function addToCart(id) {
-  const product = products.find((p) => p.id === id);
+function addToCart(el) {
+  const product = products.find((p) => p.id === +el.target.id);
+  const cartProduct = cart.find(p => p.id === +el.target.id);
+
   if (!product) {
     return;
   }
+
+  if (cartProduct) {
+    cartProduct.qty++
+    renderCart()
+    return;
+  }
+  
   cart.push({ id: product.id, name: product.name, price: product.price, qty: 1 });
   renderCart();
 }
 
 function increaseQty(id) {
   const item = cart.find((i) => i.id === id);
-  item.qty;
+  item.qty++;
   renderCart();
 }
 
@@ -57,6 +67,10 @@ function removeItem(id) {
 }
 
 function applyPromo() {
+  if (!cart[0]) {
+    emptyMsg.hidden = false;
+    return
+  }
   if ((promoInput.value = "SALE10")) {
     discount = 0.1;
   }
@@ -64,13 +78,16 @@ function applyPromo() {
 }
 
 function clearCart() {
-  cart.splice(0, 1);
+  cart = [];
   renderCart();
+  emptyMsg.hidden = false
 }
 
+let bageCount = 0;
 function renderCart() {
   cartItemsEl.innerHTML = "";
-  let total = "";
+  let bageCount = 0;
+  let total = 0;
   cart.forEach((item) => {
     const lineTotal = item.price;
     const li = document.createElement("li");
@@ -79,20 +96,22 @@ function renderCart() {
       <button class="qty-btn" data-act="dec">−</button>
       <span class="qty">${item.qty}</span>
       <button class="qty-btn" data-act="inc">+</button>
-      <span class="line">${lineTotal} ₽</span>
+      <span class="line">${lineTotal * item.qty} ₽</span>
       <button class="remove">✕</button>`;
     li.querySelector('[data-act="inc"]').addEventListener("click", () => increaseQty(item.id));
     li.querySelector('[data-act="dec"]').addEventListener("click", () => decreaseQty(item.id));
     li.querySelector(".remove").addEventListener("click", () => removeItem(item.id));
     cartItemsEl.appendChild(li);
     total += item.price * item.qty;
+    bageCount += item.qty;
   });
-
+  
+  
   if (discount) {
     total = total - total * discount;
   }
-
-  badgeEl.textContent = cart.length;
+  
+  badgeEl.textContent = bageCount;
   totalEl.textContent = total;
   emptyMsg.hidden = true;
 }
