@@ -12,6 +12,10 @@ let nextId = 1;
 
 function addTask() {
   const text = input.value;
+  if (text === '' || text.trim() === '') {
+    errorEl.hidden = false 
+    return
+  }
   errorEl.hidden = true;
   tasks.push({ id: nextId++, text: text, done: false });
   input.value = "";
@@ -20,22 +24,37 @@ function addTask() {
 
 function toggleTask(id) {
   const task = tasks.find((t) => t.id === id);
-  task.done = true;
+  if (task.done === true) {
+    task.done = false;
+  } else {
+    task.done = true;
+  }
+  console.log(task.done)
+  
   render();
 }
 
 function deleteTask(id) {
-  tasks.filter((t) => t.id !== id);
+  const task = tasks.filter((t) => t.id !== id)
+  tasks = task;
   render();
 }
 
 function clearCompleted() {
-  tasks = [];
+  tasks = tasks.filter((task) => task.done !== true);
   render();
 }
 
 function getVisibleTasks() {
-  return tasks;
+  if (currentFilter === 'all') {
+    return tasks;
+  }
+  if (currentFilter === 'active') {
+    return tasks.filter((task) => task.done === false)
+  }
+  if (currentFilter === 'done') {
+    return tasks.filter((task) => task.done === true)
+  }
 }
 
 function updateCounter() {
@@ -43,33 +62,36 @@ function updateCounter() {
 }
 
 function render() {
-  const visible = getVisibleTasks();
-  for (let i = 1; i <= visible.length; i++) {
-    const task = visible[i];
-    const li = document.createElement("li");
-    li.className = "task";
-    if (task.done) {
-      li.classList.add("completed");
+    list.innerHTML = '';
+    const visible = getVisibleTasks();
+    console.log(visible)
+    for (let i = 0; i < visible.length; i++) {
+      const task = visible[i];
+      const li = document.createElement("li");
+      li.className = "task";
+      if (task.done) {
+        li.classList.add("done");
+      }
+  
+      const span = document.createElement("span");
+      span.className = "task__text";
+      span.textContent = task.text;
+      span.addEventListener("click", () => toggleTask(task.id));
+  
+      const del = document.createElement("button");
+      del.className = "task__del";
+      del.textContent = "✕";
+      del.addEventListener("click", () => deleteTask(task.id));
+  
+      li.appendChild(span);
+      li.appendChild(del);
+      list.appendChild(li);
     }
-
-    const span = document.createElement("span");
-    span.className = "task__text";
-    span.textContent = task.text;
-    span.addEventListener("click", () => toggleTask(task.id));
-
-    const del = document.createElement("button");
-    del.className = "task__del";
-    del.textContent = "✕";
-    del.addEventListener("click", () => deleteTask(task.id));
-
-    li.appendChild(span);
-    li.appendChild(del);
-    list.appendChild(li);
-  }
-  updateCounter();
+    updateCounter();
+  
 }
 
-addBtn.addEventListener("dblclick", addTask);
+addBtn.addEventListener("click", addTask);
 clearBtn.addEventListener("click", clearCompleted);
 
 filterButtons.forEach((btn) => {
